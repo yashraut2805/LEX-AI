@@ -5,21 +5,21 @@
 @layer base {
   body {
     @apply bg-slate-50 text-slate-900 dark:bg-zinc-950 dark:text-zinc-50 transition-colors duration-300;
-    font-family: "Times New Roman", Times, "Times Roman", Georgia, serif;
+    font-family: var(--font-family, 'Inter', system-ui, sans-serif);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
-  /* Polish serif headings and body texts for a high-end editorial feel */
+  /* Polish headings and body texts with dynamic typography variables */
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Times New Roman", Times, "Times Roman", Georgia, serif;
-    letter-spacing: 0.015em;
+    font-family: var(--font-heading, 'Outfit', 'Inter', system-ui, sans-serif);
+    letter-spacing: -0.01em;
     font-weight: 700;
   }
 
   p, span, div, td, th, button, input, select, textarea {
-    font-family: "Times New Roman", Times, "Times Roman", Georgia, serif;
+    font-family: var(--font-family, 'Inter', system-ui, sans-serif);
     letter-spacing: 0.01em;
   }
 }

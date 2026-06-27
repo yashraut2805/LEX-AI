@@ -61,6 +61,8 @@ interface AppContextType {
   setCurrentView: (view: string) => void;
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
+  fontFamily: string;
+  setFontFamily: (font: string) => void;
   ollamaUrl: string;
   setOllamaUrl: (url: string) => void;
   ollamaModel: string;
@@ -90,6 +92,31 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Google Fonts mapping for dynamic link inclusion
+const GOOGLE_FONTS: Record<string, string> = {
+  'Playfair Display': 'family=Playfair+Display:wght@400;500;600;700;800',
+  'Lora': 'family=Lora:wght@400;500;600;700',
+  'Fira Code': 'family=Fira+Code:wght@400;500;600;700',
+  'Roboto': 'family=Roboto:wght@300;400;500;700',
+  'Poppins': 'family=Poppins:wght@300;400;500;600;700',
+  'Merriweather': 'family=Merriweather:wght@300;400;700',
+};
+
+// Font stack styles to inject into HTML CSS custom properties
+const FONT_STACKS: Record<string, string> = {
+  'Inter': "'Inter', system-ui, sans-serif",
+  'Outfit': "'Outfit', system-ui, sans-serif",
+  'Playfair Display': "'Playfair Display', Georgia, serif",
+  'Lora': "'Lora', Georgia, serif",
+  'Fira Code': "'Fira Code', Consolas, Monaco, monospace",
+  'Roboto': "'Roboto', 'Helvetica Neue', Arial, sans-serif",
+  'Poppins': "'Poppins', 'Segoe UI', sans-serif",
+  'Merriweather': "'Merriweather', Georgia, serif",
+  'Times New Roman': "'Times New Roman', Times, Georgia, serif",
+  'Georgia': "Georgia, serif",
+  'System Sans': "system-ui, -apple-system, sans-serif"
+};
 
 // Sample initial documents for realistic data
 const INITIAL_DOCUMENTS: LegalDocument[] = [
@@ -346,6 +373,14 @@ This Agreement is entered into on June 20, 2026 by Apex Holdings Ltd. ("Employer
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [theme, setThemeState] = useState<'light' | 'dark'>('dark');
+  const [fontFamily, setFontFamilyState] = useState<string>(() => {
+    return localStorage.getItem('lexai-font') || 'Inter';
+  });
+
+  const setFontFamily = (font: string) => {
+    setFontFamilyState(font);
+    localStorage.setItem('lexai-font', font);
+  };
   const [ollamaUrl, setOllamaUrl] = useState<string>('http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState<string>('qwen2.5-coder:7b');
   const [ollamaStatus, setOllamaStatus] = useState<'disconnected' | 'connected' | 'checking'>('disconnected');
@@ -379,6 +414,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       root.classList.remove('dark');
     }
   }, [theme]);
+
+  // Dynamically load Google Font and sync with CSS custom properties
+  useEffect(() => {
+    if (GOOGLE_FONTS[fontFamily]) {
+      const linkId = `google-font-${fontFamily.replace(/\s+/g, '-').toLowerCase()}`;
+      if (!document.getElementById(linkId)) {
+        const link = document.createElement('link');
+        link.id = linkId;
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?${GOOGLE_FONTS[fontFamily]}&display=swap`;
+        document.head.appendChild(link);
+      }
+    }
+
+    const root = window.document.documentElement;
+    const stack = FONT_STACKS[fontFamily] || FONT_STACKS['Inter'];
+    root.style.setProperty('--font-family', stack);
+    
+    if (fontFamily === 'Outfit' || fontFamily === 'Inter') {
+      root.style.setProperty('--font-heading', "'Outfit', sans-serif");
+    } else {
+      root.style.setProperty('--font-heading', stack);
+    }
+  }, [fontFamily]);
 
   // Toggle helper
   const setTheme = (newTheme: 'light' | 'dark') => {
@@ -791,6 +850,8 @@ Can I provide specific information on Governing Law, Obligations, Definitions, o
         setCurrentView,
         theme,
         setTheme,
+        fontFamily,
+        setFontFamily,
         ollamaUrl,
         setOllamaUrl,
         ollamaModel,
