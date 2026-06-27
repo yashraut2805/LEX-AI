@@ -13,6 +13,7 @@ import {
   Columns, 
   Bot, 
   Settings,
+  BookOpenCheck,
   Scale,
   ChevronLeft,
   ChevronRight
@@ -38,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed, toggl
     { id: 'defined-terms', name: 'Defined Terms Dictionary', icon: BookOpen },
     { id: 'obligation-tracker', name: 'Obligation Tracker', icon: CalendarClock },
     { id: 'comparison', name: 'Multi Contract Comparison', icon: Columns },
+    { id: 'lexcase-research', name: 'Bare Acts Browser', icon: BookOpenCheck },
     { id: 'ai-assistant', name: 'AI Legal Assistant', icon: Bot, action: toggleAIAssistant },
     { id: 'settings', name: 'Settings', icon: Settings },
   ];

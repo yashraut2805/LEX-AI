@@ -10,13 +10,16 @@ import {
   Search,
   BookOpen,
   Info,
-  CalendarDays
+  CalendarDays,
+  GitBranch
 } from 'lucide-react';
+import { CitationNetworkPanel } from '../components/CitationNetworkPanel';
 
 export const DocumentAnalysis: React.FC = () => {
   const { documents, selectedDocumentId } = useApp();
   const [activeTab, setActiveTab] = useState<'summary' | 'clauses' | 'risks' | 'missing' | 'obligations' | 'definitions'>('summary');
   const [highlightedText, setHighlightedText] = useState<string | null>(null);
+  const [activeCitationCase, setActiveCitationCase] = useState<string | null>(null);
 
   const doc = documents.find(d => d.id === selectedDocumentId);
 
@@ -201,6 +204,16 @@ export const DocumentAnalysis: React.FC = () => {
                     <span>Audit Explanation</span>
                     <span className="font-semibold text-slate-600 dark:text-zinc-400">Confidence: {clause.confidence}%</span>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveCitationCase(clause.type);
+                    }}
+                    className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                  >
+                    <GitBranch size={12} />
+                    View Citation Network
+                  </button>
                 </div>
               ))}
             </div>
@@ -335,6 +348,13 @@ export const DocumentAnalysis: React.FC = () => {
 
         </div>
       </div>
+
+      {activeCitationCase && (
+        <CitationNetworkPanel
+          caseName={activeCitationCase}
+          onClose={() => setActiveCitationCase(null)}
+        />
+      )}
 
     </div>
   );
