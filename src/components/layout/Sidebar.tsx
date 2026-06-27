@@ -19,7 +19,9 @@ import {
   Handshake,
   LayoutTemplate,
   PenTool,
-  Timer
+  Timer,
+  Users,
+  GitMerge
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -47,15 +49,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed, toggl
         { id: 'comparison', name: 'Multi Contract Comparison', icon: Columns },
       ],
     },
-    {
-      label: 'Contracts+',
-      items: [
-        { id: 'negotiation-assistant', name: 'Negotiation Assistant', icon: Handshake },
-        { id: 'templates-library', name: 'Templates Library', icon: LayoutTemplate },
-        { id: 'esign-integration', name: 'eSign Integration', icon: PenTool },
-        { id: 'limitation-tracker', name: 'Limitation Tracker', icon: Timer },
-      ],
-    },
+   {
+  label: 'Contracts+',
+  items: [
+    { id: 'negotiation-assistant', name: 'Negotiation Assistant', icon: Handshake },
+    { id: 'templates-library', name: 'Templates Library', icon: LayoutTemplate },
+    { id: 'esign-integration', name: 'eSign Integration', icon: PenTool },
+    { id: 'limitation-tracker', name: 'Limitation Tracker', icon: Timer },
+  ],
+},
+{
+  label: 'LexCase',
+  items: [
+    { id: 'client-portal', name: 'Client Portal', icon: Users },
+    { id: 'approval-workflows', name: 'Approval Workflows', icon: GitMerge },
+  ],
+},
     {
       label: 'System',
       items: [
