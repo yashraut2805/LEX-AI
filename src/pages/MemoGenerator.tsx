@@ -44,11 +44,101 @@ export const MemoGenerator: React.FC = () => {
     
     // Simulate generation/downloading flow
     setTimeout(() => {
-      // Create element and simulate downloading text
+      // Create element and generate styled Word HTML
+      const htmlContent = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>Legal Memorandum</title>
+          <!--[if gte mso 9]>
+          <xml>
+            <w:WordDocument>
+              <w:View>Print</w:View>
+              <w:Zoom>100</w:Zoom>
+            </w:WordDocument>
+          </xml>
+          <![endif]-->
+          <style>
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 11pt;
+              line-height: 1.5;
+              margin: 1in;
+              color: #334155;
+            }
+            .title-header {
+              font-size: 16pt;
+              font-weight: bold;
+              color: #2563eb;
+              text-transform: uppercase;
+              margin-bottom: 15px;
+              border-bottom: 2px solid #0f172a;
+              padding-bottom: 10px;
+            }
+            .metadata-table {
+              width: 100%;
+              margin-bottom: 30px;
+              border-collapse: collapse;
+            }
+            .metadata-label {
+              font-weight: bold;
+              color: #64748b;
+              width: 15%;
+              padding: 4px 0;
+            }
+            .metadata-value {
+              font-weight: bold;
+              color: #0f172a;
+              width: 35%;
+              padding: 4px 0;
+            }
+            .content-body {
+              font-family: 'Times New Roman', Times, serif;
+              white-space: pre-wrap;
+              font-size: 11pt;
+              line-height: 1.6;
+            }
+            .disclaimer {
+              border-top: 1px solid #e2e8f0;
+              margin-top: 40px;
+              padding-top: 15px;
+              font-size: 9pt;
+              color: #94a3b8;
+              text-align: center;
+              font-style: italic;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="title-header">Internal Legal Memorandum</div>
+          <table class="metadata-table">
+            <tr>
+              <td class="metadata-label">TO:</td>
+              <td class="metadata-value">Corporate Review Counsel</td>
+              <td class="metadata-label">DATE:</td>
+              <td class="metadata-value">${doc.uploadDate}</td>
+            </tr>
+            <tr>
+              <td class="metadata-label">FROM:</td>
+              <td class="metadata-value">LexAI Ollama Engine</td>
+              <td class="metadata-label">RE:</td>
+              <td class="metadata-value">${doc.name} Review</td>
+            </tr>
+          </table>
+          
+          <div class="content-body">${doc.memo.replace(/\n/g, '<br>')}</div>
+
+          <div class="disclaimer">
+            DISCLAIMER: This legal memorandum is prepared using local AI LLM models (Ollama fine-tuned Qwen parameters). It represents a preliminary audit and does not constitute formal legal counsel. Please verify all clauses with qualified attorneys.
+          </div>
+        </body>
+        </html>
+      `;
+      
       const element = document.createElement("a");
-      const file = new Blob([doc.memo], {type: 'text/plain'});
+      const file = new Blob([htmlContent], {type: 'application/msword'});
       element.href = URL.createObjectURL(file);
-      element.download = `${doc.name.replace(/\.[^/.]+$/, "")}_Legal_Memo.docx`;
+      element.download = `${doc.name.replace(/\.[^/.]+$/, "")}_Legal_Memo.doc`;
       document.body.appendChild(element);
       element.click();
       document.body.removeChild(element);
@@ -98,12 +188,12 @@ export const MemoGenerator: React.FC = () => {
             {downloading ? (
               <>
                 <RefreshCw size={14} className="animate-spin" />
-                Drafting DOCX...
+                Drafting DOC...
               </>
             ) : (
               <>
                 <Download size={14} />
-                Download DOCX
+                Download DOC
               </>
             )}
           </button>
