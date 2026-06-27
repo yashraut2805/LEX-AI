@@ -573,8 +573,26 @@ The uploaded document ${cleanName} was processed with high confidence.
     setChatMessages((prev) => [...prev, userMsg]);
 
     const activeDoc = documents.find(d => d.id === selectedDocumentId);
+    
+    // Enrich context for local Ollama instances
     const documentContext = activeDoc 
-      ? `You are discussing the legal document: "${activeDoc.name}". Here is a summary: ${activeDoc.summary.overview}. The risks identified are: ${activeDoc.risks.map(r => r.title + " - " + r.description).join("; ")}.`
+      ? `You are discussing the legal document: "${activeDoc.name}".
+Summary Overview: ${activeDoc.summary.overview}
+Parties Involved: ${activeDoc.summary.parties.join(', ')}
+Agreement Date: ${activeDoc.summary.date}
+Governing Jurisdiction: ${activeDoc.summary.jurisdiction}
+Clauses Audited:
+${activeDoc.clauses.map(c => `- ${c.type} (${c.status}): ${c.text} (Audit Note: ${c.explanation})`).join('\n')}
+Risks Found:
+${activeDoc.risks.map(r => `- [${r.level} Risk] ${r.title}: ${r.description} (Rec: ${r.recommendation}) (Ref: ${r.reference})`).join('\n')}
+Missing Clauses:
+${activeDoc.missingClauses.map(m => `- ${m.type} (${m.criticality} Severity): ${m.description} (Proposed Text: "${m.typicalText}")`).join('\n')}
+Extracted Obligations:
+${activeDoc.obligations.map(o => `- ${o.party}: ${o.task} (Deadline: ${o.deadline}, Status: ${o.status})`).join('\n')}
+Defined Terms:
+${activeDoc.definitions.map(d => `- "${d.term}" (Page ${d.page}): ${d.definition}`).join('\n')}
+Full Raw Document Excerpt:
+${activeDoc.rawText}`
       : 'No active document selected.';
 
     // Construct AI message placeholder
@@ -616,26 +634,137 @@ The uploaded document ${cleanName} was processed with high confidence.
       }
     }
 
-    // High quality fallback simulated response
+    // High quality fallback simulated response (intelligent NLP parser)
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
     let answer = '';
     const query = text.toLowerCase();
+    const stopwords = new Set(['what', 'is', 'the', 'a', 'of', 'and', 'to', 'in', 'on', 'about', 'for', 'with', 'from', 'by', 'who', 'how', 'when', 'where', 'contract', 'agreement', 'document']);
+    const queryTerms = query.split(/\s+/).map(w => w.replace(/[^a-z0-9]/g, '')).filter(w => w.length > 3 && !stopwords.has(w));
     
     if (activeDoc) {
-      if (query.includes('risk') || query.includes('danger') || query.includes('warn')) {
-        answer = `Based on my analysis of "${activeDoc.name}", I found ${activeDoc.risks.length} key risks. The most critical is: "${activeDoc.risks[0]?.title || 'none'}" - ${activeDoc.risks[0]?.description || ''}. I recommend: ${activeDoc.risks[0]?.recommendation || 'reviewing the sections'}.`;
-      } else if (query.includes('clause') || query.includes('section')) {
-        answer = `In "${activeDoc.name}", the main clauses verified are: ${activeDoc.clauses.map(c => c.type).join(', ')}. We flagged: ${activeDoc.clauses.filter(c => c.status === 'Modified').map(c => c.type).join(', ') || 'none'} as modified.`;
-      } else if (query.includes('missing') || query.includes('lack')) {
-        answer = `Yes, looking closely at "${activeDoc.name}", there are ${activeDoc.missingClauses.length} missing clauses. These include: ${activeDoc.missingClauses.map(m => m.type).join(', ')}. Adding these would increase the score significantly.`;
-      } else if (query.includes('governing law') || query.includes('jurisdiction') || query.includes('state')) {
-        answer = `The contract specifies the governing law as: ${activeDoc.summary.jurisdiction || 'Not explicitly stated'}. This is referenced under the main summary metadata.`;
+      // 1. Governing Law & Jurisdiction
+      if (query.includes('governing law') || query.includes('jurisdiction') || query.includes('law governed') || query.includes('state of')) {
+        answer = `The contract "${activeDoc.name}" specifies the governing law and jurisdiction as the **${activeDoc.summary.jurisdiction}**. 
+        
+This is referenced under the contract's primary metadata. If a dispute arises, it will be heard under these state laws.`;
+      
+      // 2. Parties
+      } else if (query.includes('parties') || query.includes('party') || query.includes('who is involved') || query.includes('who signed')) {
+        answer = `The contracting parties identified in "${activeDoc.name}" are:
+${activeDoc.summary.parties.map((p, idx) => `• **Party ${idx + 1}**: ${p}`).join('\n')}
+
+These parties are mutually bound to all provisions, representations, and warranties detailed in this contract.`;
+      
+      // 3. Date / Duration / Effective
+      } else if (query.includes('date') || query.includes('effective') || query.includes('signed') || query.includes('signing')) {
+        answer = `The agreement was signed/became effective on **${activeDoc.summary.date}**. 
+
+All obligations and restrictive covenants start running from this effective date unless otherwise specified in individual clauses.`;
+      
+      // 4. Executive Summary / Overview
+      } else if (query.includes('summary') || query.includes('summarize') || query.includes('overview') || query.includes('what is this') || query.includes('abstract')) {
+        answer = `### Executive Summary of "${activeDoc.name}":
+${activeDoc.summary.overview}
+
+**Key Details:**
+• **Signed Date:** ${activeDoc.summary.date}
+• **Governing Jurisdiction:** ${activeDoc.summary.jurisdiction}
+• **Parties:** ${activeDoc.summary.parties.join(' AND ')}`;
+      
+      // 5. Risks List
+      } else if (query.includes('risk') || query.includes('danger') || query.includes('warn') || query.includes('threat') || query.includes('exposure')) {
+        answer = `### Risk and Exposure Assessment for "${activeDoc.name}":
+I identified **${activeDoc.risks.length} key risks** that warrant legal review:
+
+${activeDoc.risks.map((r, i) => `${i + 1}. **${r.title}** (${r.level} Risk) - *Ref: ${r.reference}*
+   - **Description:** ${r.description}
+   - **Recommendation:** ${r.recommendation}`).join('\n\n')}`;
+      
+      // 6. Missing Clauses / Checklist
+      } else if (query.includes('missing') || query.includes('lack') || query.includes('absent') || query.includes('checklist')) {
+        answer = `### Missing Clauses Audit for "${activeDoc.name}":
+I flagged **${activeDoc.missingClauses.length} missing provisions** that should be incorporated for standard compliance:
+
+${activeDoc.missingClauses.map((m, i) => `${i + 1}. **${m.type}** (Criticality: **${m.criticality}**)
+   - **Gap Description:** ${m.description}
+   - **Recommended Typical Text to Insert:** 
+     \`"${m.typicalText}"\``).join('\n\n')}`;
+      
+      // 7. Obligations / Tasks
+      } else if (query.includes('obligation') || query.includes('task') || query.includes('deadline') || query.includes('todo') || query.includes('must do')) {
+        answer = `### Active Covenants and Obligations in "${activeDoc.name}":
+I extracted **${activeDoc.obligations.length} primary deliverables/obligations** for the contracting parties:
+
+${activeDoc.obligations.map((o, i) => `${i + 1}. **${o.party}**
+   - **Obligation:** ${o.task}
+   - **Deadline:** ${o.deadline}
+   - **Current Status:** \`${o.status}\``).join('\n\n')}`;
+      
+      // 8. Specific Definitions search
+      } else if (query.includes('define') || query.includes('definition') || query.includes('mean') || query.includes('meaning') || query.includes('term') || query.includes('who is')) {
+        // Find if any defined term is mentioned in the query
+        const matchingDefs = activeDoc.definitions.filter(d => 
+          query.includes(d.term.toLowerCase()) || 
+          queryTerms.some(word => d.term.toLowerCase().includes(word))
+        );
+
+        if (matchingDefs.length > 0) {
+          answer = `### Extracted Definition(s) from "${activeDoc.name}":
+${matchingDefs.map(d => `• **${d.term}** (Page ${d.page}): ${d.definition}`).join('\n\n')}`;
+        } else {
+          answer = `### Key Defined Terms in "${activeDoc.name}":
+Here are the primary terms defined in this agreement:
+
+${activeDoc.definitions.map(d => `• **${d.term}** (Page ${d.page}): *${d.definition}*`).join('\n')}`;
+        }
+      
+      // 9. Specific Clauses Search (Termination, Liability, Confidentiality, Force Majeure, etc.)
       } else {
-        answer = `Regarding "${activeDoc.name}": The contract involves ${activeDoc.summary.parties.join(' and ')}. Key findings suggest reviewing the limitation of liability terms and checking for the lack of ${activeDoc.missingClauses[0]?.type || 'specific custom terms'}. Can I assist with anything else?`;
+        // Look if query matches any clause types in activeDoc
+        const matchingClause = activeDoc.clauses.find(c => 
+          query.includes(c.type.toLowerCase()) || 
+          c.type.toLowerCase().split(/\s+/).some(w => w.length > 4 && query.includes(w))
+        );
+
+        if (matchingClause) {
+          answer = `### Audited Clause: **${matchingClause.type}**
+• **Status:** \`${matchingClause.status}\` (Confidence: ${matchingClause.confidence}%)
+• **Text in Agreement:**
+  *"${matchingClause.text}"*
+• **AI Audit Evaluation:** 
+  ${matchingClause.explanation}`;
+        } else {
+          // 10. Fallback keyword lookup in the raw text lines
+          const rawLines = activeDoc.rawText.split('\n');
+          const matchingLines: string[] = [];
+
+          if (queryTerms.length > 0) {
+            for (const line of rawLines) {
+              if (queryTerms.some(word => line.toLowerCase().includes(word))) {
+                matchingLines.push(line.trim());
+              }
+              if (matchingLines.length >= 3) break; // cap at 3 excerpts
+            }
+          }
+
+          if (matchingLines.length > 0) {
+            answer = `### Relevant Excerpt(s) found in "${activeDoc.name}":
+${matchingLines.map(line => `> *"${line}"*`).join('\n\n')}
+
+Let me know if you want me to expand on these or perform a deep dive into specific covenants.`;
+          } else {
+            // General response summarizing what's available
+            answer = `Regarding "${activeDoc.name}": The contract is between **${activeDoc.summary.parties.join(' and ')}**, signed on **${activeDoc.summary.date}**. 
+
+I identified **${activeDoc.risks.length} risks** (including a *${activeDoc.risks[0]?.title}*) and **${activeDoc.missingClauses.length} missing clauses** (such as *${activeDoc.missingClauses[0]?.type}*).
+
+Can I provide specific information on Governing Law, Obligations, Definitions, or Risk Recommendations?`;
+          }
+        }
       }
     } else {
-      answer = "Please upload or select a legal document. I'll help you audit, query, and verify specific clause definitions.";
+      answer = "Please select or upload an active document. Once loaded, I can answer questions about the governing law, parties, obligations, risks, definitions, and specific clauses of that agreement.";
     }
 
     setChatMessages((prev) => 

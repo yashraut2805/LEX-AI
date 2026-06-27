@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   FileText, 
@@ -14,9 +14,17 @@ import {
 } from 'lucide-react';
 
 export const DocumentAnalysis: React.FC = () => {
-  const { documents, selectedDocumentId } = useApp();
+  const { documents, selectedDocumentId, currentView } = useApp();
   const [activeTab, setActiveTab] = useState<'summary' | 'clauses' | 'risks' | 'missing' | 'obligations' | 'definitions'>('summary');
   const [highlightedText, setHighlightedText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (currentView === 'missing-checklist') {
+      setActiveTab('missing');
+    } else if (currentView === 'contract-analysis') {
+      setActiveTab('summary');
+    }
+  }, [currentView]);
 
   const doc = documents.find(d => d.id === selectedDocumentId);
 
