@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { AIAssistant } from './components/layout/AIAssistant';
 
+
 // Pages
 import { Dashboard } from './pages/Dashboard';
 import { Upload } from './pages/Upload';
@@ -15,6 +16,10 @@ import { ObligationTracker } from './pages/ObligationTracker';
 import { MemoGenerator } from './pages/MemoGenerator';
 import { Comparison } from './pages/Comparison';
 import { Settings } from './pages/Settings';
+import { NegotiationAssistant } from './pages/NegotiationAssistant';
+import { TemplatesLibrary } from './pages/TemplatesLibrary';
+import { ESignIntegration } from './pages/ESignIntegration';
+import { LimitationTracker } from './pages/LimitationTracker';
 
 const AppContent: React.FC = () => {
   const { currentView } = useApp();
@@ -24,6 +29,14 @@ const AppContent: React.FC = () => {
   // Render active page
   const renderView = () => {
     switch (currentView) {
+      case 'negotiation-assistant':
+  return <NegotiationAssistant />;
+case 'templates-library':
+  return <TemplatesLibrary />;
+case 'esign-integration':
+  return <ESignIntegration />;
+case 'limitation-tracker':
+  return <LimitationTracker />;
       case 'dashboard':
         return <Dashboard />;
       case 'contract-analysis':
