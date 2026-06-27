@@ -12,13 +12,16 @@ import {
   Wifi,
   WifiOff,
   RefreshCw,
-  Cpu
+  Cpu,
+  Type
 } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { 
     theme, 
     setTheme, 
+    fontFamily,
+    setFontFamily,
     ollamaUrl, 
     setOllamaUrl, 
     ollamaModel, 
@@ -223,6 +226,36 @@ export const Settings: React.FC = () => {
                 >
                   <Moon size={14} />
                 </button>
+              </div>
+            </div>
+
+            {/* Typography selection preference */}
+            <div className="border-t border-slate-100 dark:border-zinc-800 pt-4 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs">
+              <div className="space-y-0.5">
+                <span className="font-bold text-slate-700 dark:text-zinc-200 block flex items-center gap-1.5">
+                  <Type size={14} className="text-blue-500" />
+                  Interface Typography Font
+                </span>
+                <span className="text-slate-400 dark:text-zinc-500">Select custom font styles for visual layout.</span>
+              </div>
+              <div className="w-full md:w-48">
+                <select
+                  value={fontFamily}
+                  onChange={(e) => setFontFamily(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all cursor-pointer"
+                >
+                  <option value="Inter">Inter (Default Clean Sans)</option>
+                  <option value="Outfit">Outfit (Modern Geometric)</option>
+                  <option value="System Sans">System Sans (Default System)</option>
+                  <option value="Times New Roman">Times New Roman (Traditional Legal)</option>
+                  <option value="Georgia">Georgia (Elegant Serif)</option>
+                  <option value="Playfair Display">Playfair Display (Stylized Serif)</option>
+                  <option value="Lora">Lora (Elegant Editorial)</option>
+                  <option value="Poppins">Poppins (Friendly Rounded)</option>
+                  <option value="Roboto">Roboto (Neo-Grotesque)</option>
+                  <option value="Merriweather">Merriweather (Readable Serif)</option>
+                  <option value="Fira Code">Fira Code (Developer Monospace)</option>
+                </select>
               </div>
             </div>
           </div>

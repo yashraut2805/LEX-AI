@@ -4,6 +4,8 @@ import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { AIAssistant } from './components/layout/AIAssistant';
 
+
+
 // Pages
 import { Dashboard } from './pages/Dashboard';
 import { Upload } from './pages/Upload';
@@ -16,6 +18,12 @@ import { MemoGenerator } from './pages/MemoGenerator';
 import { Comparison } from './pages/Comparison';
 import { LexCaseResearch } from './pages/LexCaseResearch';
 import { Settings } from './pages/Settings';
+import { NegotiationAssistant } from './pages/NegotiationAssistant';
+import { TemplatesLibrary } from './pages/TemplatesLibrary';
+import { ESignIntegration } from './pages/ESignIntegration';
+import { LimitationTracker } from './pages/LimitationTracker';
+import ClientPortal from './pages/ClientPortal';
+import ApprovalWorkflows from './pages/ApprovalWorkflows';
 
 const AppContent: React.FC = () => {
   const { currentView } = useApp();
@@ -25,6 +33,18 @@ const AppContent: React.FC = () => {
   // Render active page
   const renderView = () => {
     switch (currentView) {
+      case 'client-portal':
+  return <ClientPortal />;
+case 'approval-workflows':
+  return <ApprovalWorkflows />;
+      case 'negotiation-assistant':
+  return <NegotiationAssistant />;
+case 'templates-library':
+  return <TemplatesLibrary />;
+case 'esign-integration':
+  return <ESignIntegration />;
+case 'limitation-tracker':
+  return <LimitationTracker />;
       case 'dashboard':
         return <Dashboard />;
       case 'contract-analysis':
