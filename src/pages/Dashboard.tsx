@@ -257,28 +257,6 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Help Card */}
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white space-y-4 shadow-lg shadow-blue-600/10">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-white/10 text-white border border-white/10">
-                <BrainCircuit size={18} />
-              </div>
-              <div>
-                <h4 className="font-bold text-xs tracking-wider uppercase">Local AI Model Running</h4>
-                <p className="text-[10px] text-blue-100">Fine-Tuned for Law & Contracts</p>
-              </div>
-            </div>
-            <p className="text-xs text-blue-100 font-sans leading-relaxed">
-              LexAI is configured to process all agreements securely on your machine. Ensure Ollama is running and your fine-tuned model (e.g., Qwen-Legal) is loaded. Toggle settings to sync.
-            </p>
-            <button 
-              onClick={() => setCurrentView('settings')}
-              className="w-full py-2.5 rounded-xl bg-white text-blue-700 hover:bg-blue-50 transition-colors font-bold text-xs tracking-wider cursor-pointer"
-            >
-              MANAGE OLLAMA CONFIG
-            </button>
-          </div>
-
         </div>
 
       </div>

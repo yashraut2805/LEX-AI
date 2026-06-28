@@ -318,6 +318,7 @@ function ClauseCard({ clause }: { clause: Clause }) {
 
 export const NegotiationAssistant: React.FC = () => {
   const [filter, setFilter] = useState<'all' | Negotiability>('all');
+  const [reanalysing, setReanalysing] = useState(false);
 
   const filtered =
     filter === 'all' ? MOCK_CLAUSES : MOCK_CLAUSES.filter((c) => c.negotiability === filter);
@@ -326,6 +327,42 @@ export const NegotiationAssistant: React.FC = () => {
     negotiable: MOCK_CLAUSES.filter((c) => c.negotiability === 'negotiable').length,
     'non-negotiable': MOCK_CLAUSES.filter((c) => c.negotiability === 'non-negotiable').length,
     conditional: MOCK_CLAUSES.filter((c) => c.negotiability === 'conditional').length,
+  };
+
+  const handleReanalyse = async () => {
+    setReanalysing(true);
+    // Simulate re-analysis
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setReanalysing(false);
+    alert('Negotiation intelligence re-analysis complete! All counter-proposals refreshed.');
+  };
+
+  const handleExportReport = () => {
+    const reportText = `NEGOTIATION INTELLIGENCE REPORT
+Generated on: ${new Date().toLocaleString()}
+--------------------------------------------
+${MOCK_CLAUSES.map(c => `
+Clause: ${c.title}
+Severity: ${c.severity.toUpperCase()}
+Negotiability: ${c.negotiability.toUpperCase()}
+
+Original text:
+"${c.original}"
+
+Recommendation / Reason:
+${c.reason}
+
+Suggested Counter-Proposal:
+${c.counterProposal || 'N/A'}
+--------------------------------------------`).join('\n')}`;
+
+    const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Negotiation_Report_${new Date().toISOString().split('T')[0]}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -348,11 +385,18 @@ export const NegotiationAssistant: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 self-start md:self-center">
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs tracking-wider transition-colors">
-              <RotateCcw size={14} />
-              Re-analyse
+            <button 
+              onClick={handleReanalyse}
+              disabled={reanalysing}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs tracking-wider transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              <RotateCcw size={14} className={reanalysing ? 'animate-spin' : ''} />
+              {reanalysing ? 'Re-analysing...' : 'Re-analyse'}
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs tracking-wider transition-colors shadow-lg shadow-indigo-500/10">
+            <button 
+              onClick={handleExportReport}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs tracking-wider transition-colors shadow-lg shadow-indigo-500/10 cursor-pointer"
+            >
               <FileText size={14} />
               Export Report
             </button>

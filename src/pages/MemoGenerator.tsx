@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   FileText, 
@@ -7,7 +7,8 @@ import {
   Check, 
   Sparkles,
   RefreshCw,
-  Clock
+  Clock,
+  FileEdit
 } from 'lucide-react';
 
 export const MemoGenerator: React.FC = () => {
@@ -33,8 +34,18 @@ export const MemoGenerator: React.FC = () => {
     );
   }
 
+  const [editedMemo, setEditedMemo] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (doc) {
+      setEditedMemo(doc.memo);
+      setIsEditing(false);
+    }
+  }, [selectedDocumentId, doc]);
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(doc.memo);
+    navigator.clipboard.writeText(editedMemo);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -126,7 +137,7 @@ export const MemoGenerator: React.FC = () => {
             </tr>
           </table>
           
-          <div class="content-body">${doc.memo.replace(/\n/g, '<br>')}</div>
+          <div class="content-body">${editedMemo.replace(/\n/g, '<br>')}</div>
 
           <div class="disclaimer">
             DISCLAIMER: This legal memorandum is prepared using local AI LLM models (Ollama fine-tuned Qwen parameters). It represents a preliminary audit and does not constitute formal legal counsel. Please verify all clauses with qualified attorneys.
@@ -163,6 +174,14 @@ export const MemoGenerator: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setIsEditing(!isEditing)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-950 text-xs font-semibold text-slate-700 dark:text-zinc-300 transition-all cursor-pointer"
+          >
+            <FileEdit size={14} className={isEditing ? "text-blue-500" : ""} />
+            {isEditing ? 'View Draft' : 'Edit Memo'}
+          </button>
+          
           <button 
             onClick={handleCopy}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-950 text-xs font-semibold text-slate-700 dark:text-zinc-300 transition-all cursor-pointer"
@@ -240,8 +259,18 @@ export const MemoGenerator: React.FC = () => {
         </div>
 
         {/* Memo Body Content */}
-        <div className="font-serif text-sm leading-relaxed text-slate-700 dark:text-zinc-300 max-w-none whitespace-pre-wrap space-y-6">
-          {doc.memo}
+        <div className="font-serif text-sm leading-relaxed text-slate-700 dark:text-zinc-300 max-w-none space-y-6">
+          {isEditing ? (
+            <textarea
+              value={editedMemo}
+              onChange={(e) => setEditedMemo(e.target.value)}
+              rows={15}
+              className="w-full p-4 font-serif text-sm bg-slate-50 dark:bg-zinc-950 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all leading-relaxed"
+              placeholder="Write your memo content here..."
+            />
+          ) : (
+            <div className="whitespace-pre-wrap">{editedMemo}</div>
+          )}
         </div>
 
         {/* Footer legal disclaimer */}

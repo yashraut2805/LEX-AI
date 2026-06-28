@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   PenTool,
   Send,
@@ -299,17 +299,51 @@ function DocRow({ doc }: { doc: SignDocument }) {
 
 export const ESignIntegration: React.FC = () => {
   const [showBulkSend, setShowBulkSend] = useState(false);
+  const [documents, setDocuments] = useState<SignDocument[]>(DOCUMENTS);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const allSigners = DOCUMENTS.flatMap((d) => d.signers);
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const newDoc: SignDocument = {
+      id: `d-${Date.now()}`,
+      name: file.name,
+      uploadedOn: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      expiresOn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      auditReady: false,
+      signers: [
+        { id: `s-${Date.now()}-1`, name: 'You (Sender)', email: 'user@example.com', role: 'Sender', status: 'signed', signedAt: new Date().toLocaleString('en-IN'), method: 'otp' },
+        { id: `s-${Date.now()}-2`, name: 'Counterparty', email: 'partner@example.com', role: 'Signatory', status: 'pending', method: 'aadhaar' }
+      ]
+    };
+
+    setDocuments([newDoc, ...documents]);
+    alert(`Successfully uploaded "${file.name}" for signature request!`);
+  };
+
+  const allSigners = documents.flatMap((d) => d.signers);
   const stats = {
-    total: DOCUMENTS.length,
-    completed: DOCUMENTS.filter((d) => docStatus(d) === 'completed').length,
+    total: documents.length,
+    completed: documents.filter((d) => docStatus(d) === 'completed').length,
     pending: allSigners.filter((s) => s.status === 'pending').length,
     declined: allSigners.filter((s) => s.status === 'declined').length,
   };
 
   return (
     <div className="space-y-6">
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+      />
 
       {/* Header */}
       <div className="relative rounded-3xl overflow-hidden p-8 bg-gradient-to-r from-blue-950 via-slate-900 to-zinc-950 border border-slate-800 shadow-xl">
@@ -328,11 +362,14 @@ export const ESignIntegration: React.FC = () => {
           <div className="flex gap-2 self-start md:self-center flex-wrap">
             <button
               onClick={() => setShowBulkSend(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs tracking-wider transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white font-semibold text-xs tracking-wider transition-colors cursor-pointer"
             >
               <Users size={14} /> Bulk Send
             </button>
-            <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs tracking-wider transition-colors shadow-lg shadow-violet-500/10">
+            <button 
+              onClick={handleUploadClick}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs tracking-wider transition-colors shadow-lg shadow-violet-500/10 cursor-pointer"
+            >
               <Upload size={14} /> Upload for Signing
             </button>
           </div>
@@ -380,9 +417,9 @@ export const ESignIntegration: React.FC = () => {
           <h3 className="font-bold text-sm text-slate-800 dark:text-zinc-200 flex items-center gap-2">
             <Sparkles size={15} className="text-violet-500" /> Signature Requests
           </h3>
-          <span className="text-[11px] text-slate-400 dark:text-zinc-500">{DOCUMENTS.length} documents</span>
+          <span className="text-[11px] text-slate-400 dark:text-zinc-500">{documents.length} documents</span>
         </div>
-        {DOCUMENTS.map((doc) => <DocRow key={doc.id} doc={doc} />)}
+        {documents.map((doc) => <DocRow key={doc.id} doc={doc} />)}
       </div>
 
       {showBulkSend && <BulkSendModal onClose={() => setShowBulkSend(false)} />}

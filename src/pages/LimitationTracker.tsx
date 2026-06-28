@@ -275,9 +275,18 @@ function PeriodCard({ period, onToggleAlert }: { period: LimitationPeriod; onTog
 export const LimitationTracker: React.FC = () => {
   const [filter, setFilter] = useState<'all' | Urgency>('all');
   const [periods, setPeriods] = useState(PERIODS);
+  const [rescanning, setRescanning] = useState(false);
 
   const handleToggleAlert = (id: string) => {
     setPeriods((prev) => prev.map((p) => p.id === id ? { ...p, alertEnabled: !p.alertEnabled } : p));
+  };
+
+  const handleRescan = async () => {
+    setRescanning(true);
+    // Simulate re-scan delay
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setRescanning(false);
+    alert('Limitation act parsing scan completed! Expiry periods updated.');
   };
 
   const counts = {
@@ -310,8 +319,13 @@ export const LimitationTracker: React.FC = () => {
               Auto-detected limitation periods from your contracts. Track expiry dates, view Limitation Act references, and never miss a deadline.
             </p>
           </div>
-          <button className="flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs tracking-wider transition-colors shadow-lg shadow-amber-500/10 self-start md:self-center">
-            <Sparkles size={14} /> Re-scan Documents
+          <button 
+            onClick={handleRescan}
+            disabled={rescanning}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs tracking-wider transition-colors shadow-lg shadow-amber-500/10 self-start md:self-center disabled:opacity-50 cursor-pointer"
+          >
+            <Sparkles size={14} className={rescanning ? 'animate-spin' : ''} />
+            {rescanning ? 'Rescanning...' : 'Re-scan Documents'}
           </button>
         </div>
       </div>
