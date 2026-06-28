@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Users,
   Briefcase,
@@ -18,6 +18,7 @@ import {
   Upload,
   Eye,
   Building2,
+  X,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -158,17 +159,375 @@ const PriorityDot: React.FC<{ priority: string }> = ({ priority }) => {
   return <span className={`inline-block w-2 h-2 rounded-full ${color} mr-1.5`} />;
 };
 
+// ─── Modal Dialog Components ────────────────────────────────────────────────
+
+interface AddClientModalProps {
+  onClose: () => void;
+  onSubmit: (client: Omit<Client, 'id' | 'initials' | 'color' | 'matters' | 'totalDocuments' | 'lastActivity' | 'status'>) => void;
+}
+
+function AddClientModal({ onClose, onSubmit }: AddClientModalProps) {
+  const [name, setName] = useState('');
+  const [company, setCompany] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [type, setType] = useState<'Individual' | 'Corporate' | 'Government'>('Corporate');
+  const [priority, setPriority] = useState<'High' | 'Normal' | 'Low'>('Normal');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      alert('Please enter a name.');
+      return;
+    }
+    onSubmit({ name, company: company || 'Self-Employed', email, phone, type, priority });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-zinc-800">
+          <div>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-zinc-100">Add New Client</h3>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400">Register a new client profile in the portal database.</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-zinc-500 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Full Name</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Ramesh Mehta"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Company / Organisation</label>
+            <input
+              type="text"
+              placeholder="e.g. Mehta Infra Pvt. Ltd."
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Email</label>
+              <input
+                type="email"
+                required
+                placeholder="client@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Phone</label>
+              <input
+                type="text"
+                required
+                placeholder="+91 98201 XXXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Client Type</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as any)}
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2.5 px-2.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Corporate">Corporate</option>
+                <option value="Individual">Individual</option>
+                <option value="Government">Government</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Priority</label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as any)}
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2.5 px-2.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="High">High</option>
+                <option value="Normal">Normal</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-semibold cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-500/10 cursor-pointer"
+            >
+              Create Profile
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+interface AddMatterModalProps {
+  onClose: () => void;
+  onSubmit: (title: string, type: string, assignedTo: string, dueDate: string) => void;
+}
+
+function AddMatterModal({ onClose, onSubmit }: AddMatterModalProps) {
+  const [title, setTitle] = useState('');
+  const [type, setType] = useState('Contract');
+  const [assignedTo, setAssignedTo] = useState('Yash R.');
+  const [dueDate, setDueDate] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !dueDate) {
+      alert('Please fill in the matter title and select a due date.');
+      return;
+    }
+    onSubmit(title, type, assignedTo, dueDate);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-zinc-800">
+          <div>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-zinc-100">Add New Matter</h3>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400">Initialize a new project or case matter for this client.</p>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-zinc-500 transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Matter Title</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Pune Metro Concession Deed Review"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Type</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-2.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Contract">Contract</option>
+                <option value="Litigation">Litigation</option>
+                <option value="Property">Property</option>
+                <option value="Compliance">Compliance</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Assigned Attorney</label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-2.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Yash R.">Yash R.</option>
+                <option value="Mrudul P.">Mrudul P.</option>
+                <option value="Parth V.">Parth V.</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">Due Date</label>
+            <input
+              type="date"
+              required
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2 px-3 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-semibold cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-500/10 cursor-pointer"
+            >
+              Create Matter
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+
+interface ClientMessage {
+  id: string;
+  clientId: string;
+  from: string;
+  text: string;
+  time: string;
+  unread: boolean;
+}
+
+const INITIAL_MESSAGES: ClientMessage[] = [
+  { id: 'msg1', clientId: 'c1', from: 'Rajesh Mehta', text: 'Please review the updated clause 12 draft and share your comments.', time: '2 days ago', unread: true },
+  { id: 'msg2', clientId: 'c1', from: 'You', text: 'Reviewed. The indemnity clause needs strengthening under Section 9.', time: '3 days ago', unread: false },
+  { id: 'msg3', clientId: 'c1', from: 'Rajesh Mehta', text: 'Understood. Can we schedule a call this week?', time: '4 days ago', unread: false },
+  { id: 'msg4', clientId: 'c2', from: 'Priya Nair', text: 'Hi, did you get a chance to check the Partition Deed drafts?', time: '1 day ago', unread: true },
+  { id: 'msg5', clientId: 'c2', from: 'You', text: 'Yes, looking over the schedule of properties now.', time: '1 day ago', unread: false },
+];
+
 // ── Main Component ─────────────────────────────────────────────────────────
 const ClientPortal: React.FC = () => {
   const { theme } = useApp();
   const isDark = theme === 'dark';
+
+  const [clients, setClients] = useState<Client[]>(CLIENTS);
+  const [matters, setMatters] = useState<Matter[]>(MATTERS);
+  const [messages, setMessages] = useState<ClientMessage[]>(INITIAL_MESSAGES);
+  const [newMessageText, setNewMessageText] = useState('');
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [showAddMatter, setShowAddMatter] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedClient, setSelectedClient] = useState<Client | null>(CLIENTS[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Active' | 'Inactive' | 'Pending'>('All');
   const [activeTab, setActiveTab] = useState<'overview' | 'matters' | 'documents' | 'messages'>('overview');
 
-  const filtered = CLIENTS.filter((c) => {
+  const handleAddClientSubmit = (newClientInfo: Omit<Client, 'id' | 'initials' | 'color' | 'matters' | 'totalDocuments' | 'lastActivity' | 'status'>) => {
+    const initials = newClientInfo.name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+    
+    const colors = ['#6366f1', '#8b5cf6', '#0ea5e9', '#f59e0b', '#10b981', '#ec4899'];
+    const color = colors[clients.length % colors.length];
+
+    const newClient: Client = {
+      ...newClientInfo,
+      id: `c-${Date.now()}`,
+      initials,
+      color,
+      status: 'Active',
+      matters: 0,
+      totalDocuments: 0,
+      lastActivity: 'Just now'
+    };
+
+    setClients([newClient, ...clients]);
+    setSelectedClient(newClient);
+    setShowAddClient(false);
+    alert(`Successfully registered client profile for "${newClient.name}"!`);
+  };
+
+  const handleAddMatterSubmit = (title: string, type: string, assignedTo: string, dueDate: string) => {
+    if (!selectedClient) return;
+
+    const newMatter: Matter = {
+      id: `m-${Date.now()}`,
+      clientId: selectedClient.id,
+      title,
+      type,
+      status: 'Open',
+      dueDate: new Date(dueDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      assignedTo,
+      documentsCount: 0
+    };
+
+    setMatters([newMatter, ...matters]);
+    
+    // Update matters count for selected client
+    setClients(prevClients => 
+      prevClients.map(c => 
+        c.id === selectedClient.id ? { ...c, matters: c.matters + 1 } : c
+      )
+    );
+    
+    // Update the selected client state as well
+    setSelectedClient(prev => prev ? { ...prev, matters: prev.matters + 1 } : null);
+    setShowAddMatter(false);
+    alert(`Successfully created new matter "${title}"!`);
+  };
+
+  const handleDocumentUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleDocumentUploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedClient) return;
+
+    setClients(prev => prev.map(c => 
+      c.id === selectedClient.id ? { ...c, totalDocuments: c.totalDocuments + 1, lastActivity: 'Just now' } : c
+    ));
+    setSelectedClient(prev => prev ? { ...prev, totalDocuments: prev.totalDocuments + 1, lastActivity: 'Just now' } : null);
+
+    alert(`Successfully uploaded "${file.name}" for client ${selectedClient.name}!`);
+  };
+
+  const handleSendMessage = () => {
+    if (!newMessageText.trim() || !selectedClient) return;
+
+    const newMsg: ClientMessage = {
+      id: `msg-${Date.now()}`,
+      clientId: selectedClient.id,
+      from: 'You',
+      text: newMessageText,
+      time: 'Just now',
+      unread: false
+    };
+
+    setMessages([...messages, newMsg]);
+    setNewMessageText('');
+  };
+
+  const filtered = clients.filter((c) => {
     const matchSearch =
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.company.toLowerCase().includes(searchQuery.toLowerCase());
@@ -176,7 +535,8 @@ const ClientPortal: React.FC = () => {
     return matchSearch && matchStatus;
   });
 
-  const clientMatters = MATTERS.filter((m) => m.clientId === selectedClient?.id);
+  const clientMatters = matters.filter((m) => m.clientId === selectedClient?.id);
+  const clientMessages = messages.filter((msg) => msg.clientId === selectedClient?.id);
 
   const bg = isDark ? 'bg-[#0f1117]' : 'bg-gray-50';
   const cardBg = isDark ? 'bg-[#161b2e]' : 'bg-white';
@@ -189,13 +549,24 @@ const ClientPortal: React.FC = () => {
 
   return (
     <div className={`flex h-full ${bg} overflow-hidden`}>
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleDocumentUploadFile}
+        className="hidden"
+      />
+
       {/* ── Left Panel: Client List ─────────────────────────────────── */}
       <div className={`w-80 flex-shrink-0 border-r ${border} flex flex-col`}>
         {/* Header */}
         <div className={`px-4 pt-5 pb-3 border-b ${border}`}>
           <div className="flex items-center justify-between mb-3">
             <h2 className={`text-lg font-semibold ${textPrimary}`}>Client Portal</h2>
-            <button className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+            <button 
+              onClick={() => setShowAddClient(true)}
+              className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            >
               <Plus size={13} />
               Add Client
             </button>
@@ -217,7 +588,7 @@ const ClientPortal: React.FC = () => {
               <button
                 key={s}
                 onClick={() => setFilterStatus(s)}
-                className={`text-xs px-2.5 py-1 rounded-full transition-colors font-medium ${
+                className={`text-xs px-2.5 py-1 rounded-full transition-colors font-medium cursor-pointer ${
                   filterStatus === s
                     ? 'bg-indigo-600 text-white'
                     : isDark ? 'bg-white/5 text-slate-400 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -271,9 +642,9 @@ const ClientPortal: React.FC = () => {
         {/* Stats footer */}
         <div className={`px-4 py-3 border-t ${border} grid grid-cols-3 gap-2`}>
           {[
-            { label: 'Total', val: CLIENTS.length, icon: Users },
-            { label: 'Active', val: CLIENTS.filter((c) => c.status === 'Active').length, icon: CheckCircle },
-            { label: 'Pending', val: CLIENTS.filter((c) => c.status === 'Pending').length, icon: AlertCircle },
+            { label: 'Total', val: clients.length, icon: Users },
+            { label: 'Active', val: clients.filter((c) => c.status === 'Active').length, icon: CheckCircle },
+            { label: 'Pending', val: clients.filter((c) => c.status === 'Pending').length, icon: AlertCircle },
           ].map(({ label, val, icon: Icon }) => (
             <div key={label} className={`rounded-lg p-2 text-center ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
               <p className={`text-lg font-bold ${textPrimary}`}>{val}</p>
@@ -321,13 +692,20 @@ const ClientPortal: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className={`p-2 rounded-lg border ${border} ${textMuted} ${hoverRow} transition-colors`}>
+                <button 
+                  onClick={handleDocumentUploadClick}
+                  className={`p-2 rounded-lg border ${border} ${textMuted} ${hoverRow} transition-colors cursor-pointer`}
+                  title="Upload client document"
+                >
                   <Upload size={15} />
                 </button>
                 <button className={`p-2 rounded-lg border ${border} ${textMuted} ${hoverRow} transition-colors`}>
                   <MoreVertical size={15} />
                 </button>
-                <button className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                <button 
+                  onClick={() => setShowAddMatter(true)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+                >
                   New Matter
                 </button>
               </div>
@@ -338,7 +716,7 @@ const ClientPortal: React.FC = () => {
               {[
                 { label: 'Active Matters', value: clientMatters.filter(m => m.status !== 'Closed').length, icon: Briefcase, color: 'text-indigo-400' },
                 { label: 'Documents', value: selectedClient.totalDocuments, icon: FileText, color: 'text-violet-400' },
-                { label: 'Messages', value: 3, icon: MessageSquare, color: 'text-blue-400' },
+                { label: 'Messages', value: clientMessages.length, icon: MessageSquare, color: 'text-blue-400' },
                 { label: 'Priority', value: selectedClient.priority, icon: Star, color: selectedClient.priority === 'High' ? 'text-red-400' : 'text-slate-400' },
               ].map(({ label, value, icon: Icon, color }) => (
                 <div key={label} className={`rounded-xl p-3 border ${border} ${cardBg}`}>
@@ -357,10 +735,10 @@ const ClientPortal: React.FC = () => {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-colors cursor-pointer ${
                     activeTab === tab
                       ? 'border-indigo-500 text-indigo-400'
-                      : `border-transparent ${textMuted} hover:text-white`
+                      : `border-transparent ${textMuted} hover:text-slate-200`
                   }`}
                 >
                   {tab}
@@ -378,7 +756,7 @@ const ClientPortal: React.FC = () => {
                   <h3 className={`text-sm font-semibold mb-4 ${textPrimary}`}>Recent Activity</h3>
                   <div className="space-y-3">
                     {[
-                      { action: 'Document uploaded', detail: 'Land_Acquisition_Draft_v3.pdf', time: '2h ago', icon: Upload, color: 'text-indigo-400 bg-indigo-500/10' },
+                      { action: 'Document uploaded', detail: `Land_Acquisition_Draft_${selectedClient.initials}.pdf`, time: 'Just now', icon: Upload, color: 'text-indigo-400 bg-indigo-500/10' },
                       { action: 'Matter status updated', detail: 'Contractor Liability Dispute → In Review', time: '1d ago', icon: AlertCircle, color: 'text-amber-400 bg-amber-500/10' },
                       { action: 'New message received', detail: 'Re: Review comments on Clause 12', time: '2d ago', icon: MessageSquare, color: 'text-blue-400 bg-blue-500/10' },
                     ].map((item, i) => (
@@ -444,7 +822,12 @@ const ClientPortal: React.FC = () => {
                   <div className={`text-center py-16 ${textMuted}`}>
                     <Briefcase size={32} className="mx-auto mb-3 opacity-40" />
                     <p className="text-sm">No matters for this client yet.</p>
-                    <button className="mt-3 text-indigo-400 text-sm hover:underline">+ Create first matter</button>
+                    <button 
+                      onClick={() => setShowAddMatter(true)}
+                      className="mt-3 text-indigo-400 text-sm hover:underline cursor-pointer"
+                    >
+                      + Create first matter
+                    </button>
                   </div>
                 ) : (
                   clientMatters.map((m) => (
@@ -475,57 +858,75 @@ const ClientPortal: React.FC = () => {
             {activeTab === 'documents' && (
               <div className="space-y-3">
                 <div className="flex justify-end mb-2">
-                  <button className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors">
+                  <button 
+                    onClick={handleDocumentUploadClick}
+                    className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  >
                     <Upload size={13} />
                     Upload Document
                   </button>
                 </div>
-                {Array.from({ length: Math.min(selectedClient.totalDocuments, 5) }).map((_, i) => (
-                  <div key={i} className={`rounded-xl border ${border} ${cardBg} p-4 flex items-center gap-3 ${hoverRow} cursor-pointer transition-colors`}>
-                    <FileText size={16} className="text-violet-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className={`text-sm font-medium ${textPrimary}`}>Document_{i + 1}_{selectedClient.initials}.pdf</p>
-                      <p className={`text-xs ${textMuted} mt-0.5`}>Uploaded 3 days ago · 1.{i + 2} MB</p>
+                {selectedClient.totalDocuments === 0 ? (
+                  <p className={`text-center py-16 text-sm ${textMuted}`}>No documents uploaded yet.</p>
+                ) : (
+                  Array.from({ length: selectedClient.totalDocuments }).map((_, i) => (
+                    <div key={i} className={`rounded-xl border ${border} ${cardBg} p-4 flex items-center gap-3 ${hoverRow} cursor-pointer transition-colors`}>
+                      <FileText size={16} className="text-violet-400 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className={`text-sm font-medium ${textPrimary}`}>Document_{i + 1}_{selectedClient.initials}.pdf</p>
+                        <p className={`text-xs ${textMuted} mt-0.5`}>Uploaded recently · 1.2 MB</p>
+                      </div>
+                      <button className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-white/8' : 'hover:bg-gray-100'} transition-colors cursor-pointer`}>
+                        <Eye size={13} className={textMuted} />
+                      </button>
                     </div>
-                    <button className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-white/8' : 'hover:bg-gray-100'} transition-colors`}>
-                      <Eye size={13} className={textMuted} />
-                    </button>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             )}
 
             {activeTab === 'messages' && (
               <div className="space-y-4">
-                {[
-                  { from: selectedClient.name, text: 'Please review the updated clause 12 draft and share your comments.', time: '2 days ago', unread: true },
-                  { from: 'You', text: 'Reviewed. The indemnity clause needs strengthening under Section 9.', time: '3 days ago', unread: false },
-                  { from: selectedClient.name, text: 'Understood. Can we schedule a call this week?', time: '4 days ago', unread: false },
-                ].map((msg, i) => (
-                  <div key={i} className={`rounded-xl border ${border} ${cardBg} p-4`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white`}
-                          style={{ backgroundColor: msg.from === 'You' ? '#6366f1' : selectedClient.color }}>
-                          {msg.from === 'You' ? 'Y' : selectedClient.initials}
+                {clientMessages.length === 0 ? (
+                  <p className={`text-center py-8 text-sm ${textMuted}`}>No messages yet. Send a message to start the thread.</p>
+                ) : (
+                  clientMessages.map((msg, i) => (
+                    <div key={i} className={`rounded-xl border ${border} ${cardBg} p-4`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white`}
+                            style={{ backgroundColor: msg.from === 'You' ? '#6366f1' : selectedClient.color }}>
+                            {msg.from === 'You' ? 'Y' : selectedClient.initials}
+                          </div>
+                          <span className={`text-sm font-medium ${textPrimary}`}>{msg.from}</span>
+                          {msg.unread && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
                         </div>
-                        <span className={`text-sm font-medium ${textPrimary}`}>{msg.from}</span>
-                        {msg.unread && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
+                        <span className={`text-xs ${textMuted}`}>{msg.time}</span>
                       </div>
-                      <span className={`text-xs ${textMuted}`}>{msg.time}</span>
+                      <p className={`text-sm ${textMuted} pl-9`}>{msg.text}</p>
                     </div>
-                    <p className={`text-sm ${textMuted} pl-9`}>{msg.text}</p>
-                  </div>
-                ))}
+                  ))
+                )}
                 {/* Reply box */}
                 <div className={`rounded-xl border ${border} ${cardBg} p-4`}>
                   <textarea
                     rows={3}
                     placeholder="Type a message..."
+                    value={newMessageText}
+                    onChange={(e) => setNewMessageText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
                     className={`w-full text-sm rounded-lg border ${inputBg} p-3 outline-none resize-none focus:ring-1 focus:ring-indigo-500/50`}
                   />
                   <div className="flex justify-end mt-2">
-                    <button className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-colors">
+                    <button 
+                      onClick={handleSendMessage}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
                       Send
                     </button>
                   </div>
@@ -541,6 +942,20 @@ const ClientPortal: React.FC = () => {
             <p className="text-sm">Select a client to view details</p>
           </div>
         </div>
+      )}
+
+      {showAddClient && (
+        <AddClientModal
+          onClose={() => setShowAddClient(false)}
+          onSubmit={handleAddClientSubmit}
+        />
+      )}
+
+      {showAddMatter && (
+        <AddMatterModal
+          onClose={() => setShowAddMatter(false)}
+          onSubmit={handleAddMatterSubmit}
+        />
       )}
     </div>
   );

@@ -401,8 +401,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const stats = {
     contractsAnalysed: documents.length,
     risksFound: documents.reduce((acc, doc) => acc + (doc.status === 'Analyzed' ? doc.risks.length : 0), 0),
-    clausesVerified: documents.length > 0 
-      ? Math.round((documents.reduce((acc, doc) => acc + doc.clauses.filter(c => c.status === 'Present' || c.status === 'Modified').length, 0) / 
+    clausesVerified: documents.length > 0
+      ? Math.round((documents.reduce((acc, doc) => acc + doc.clauses.filter(c => c.status === 'Present' || c.status === 'Modified').length, 0) /
         documents.reduce((acc, doc) => acc + doc.clauses.length, 0)) * 100)
       : 0,
     missingClausesCount: documents.reduce((acc, doc) => acc + (doc.status === 'Analyzed' ? doc.missingClauses.length : 0), 0),
@@ -435,7 +435,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const root = window.document.documentElement;
     const stack = FONT_STACKS[fontFamily] || FONT_STACKS['Inter'];
     root.style.setProperty('--font-family', stack);
-    
+
     if (fontFamily === 'Outfit' || fontFamily === 'Inter') {
       root.style.setProperty('--font-heading', "'Outfit', sans-serif");
     } else {
@@ -482,7 +482,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Upload and parse mock AI document
   const uploadDocument = async (file: File) => {
     setAnalysisLoading(true);
-    
+
     // Simulate upload delay and legal analysis parsing
     await new Promise((resolve) => setTimeout(resolve, 3500));
 
@@ -493,7 +493,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Generate dynamic mock analysis based on file name or generic legal text
     const isNDA = cleanName.toLowerCase().includes('nda') || cleanName.toLowerCase().includes('disclosure') || cleanName.toLowerCase().includes('confidential');
-    
+
     const newDoc: LegalDocument = {
       id,
       name: cleanName,
@@ -643,9 +643,9 @@ The uploaded document ${cleanName} was processed with high confidence.
     setChatMessages((prev) => [...prev, userMsg]);
 
     const activeDoc = documents.find(d => d.id === selectedDocumentId);
-    
+
     // Enrich context for local Ollama instances
-    const documentContext = activeDoc 
+    const documentContext = activeDoc
       ? `You are discussing the legal document: "${activeDoc.name}".
 Summary Overview: ${activeDoc.summary.overview}
 Parties Involved: ${activeDoc.summary.parties.join(', ')}
@@ -694,7 +694,7 @@ ${activeDoc.rawText}`
         if (response.ok) {
           const data = await response.json();
           const aiResponseText = data.message?.content || 'Unable to parse Ollama output.';
-          setChatMessages((prev) => 
+          setChatMessages((prev) =>
             prev.map(m => m.id === aiMsgId ? { ...m, text: aiResponseText } : m)
           );
           return;
@@ -706,33 +706,33 @@ ${activeDoc.rawText}`
 
     // High quality fallback simulated response (intelligent NLP parser)
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
+
     let answer = '';
     const query = text.toLowerCase();
     const stopwords = new Set(['what', 'is', 'the', 'a', 'of', 'and', 'to', 'in', 'on', 'about', 'for', 'with', 'from', 'by', 'who', 'how', 'when', 'where', 'contract', 'agreement', 'document']);
     const queryTerms = query.split(/\s+/).map(w => w.replace(/[^a-z0-9]/g, '')).filter(w => w.length > 3 && !stopwords.has(w));
-    
+
     if (activeDoc) {
       // 1. Governing Law & Jurisdiction
       if (query.includes('governing law') || query.includes('jurisdiction') || query.includes('law governed') || query.includes('state of')) {
         answer = `The contract "${activeDoc.name}" specifies the governing law and jurisdiction as the **${activeDoc.summary.jurisdiction}**. 
         
 This is referenced under the contract's primary metadata. If a dispute arises, it will be heard under these state laws.`;
-      
-      // 2. Parties
+
+        // 2. Parties
       } else if (query.includes('parties') || query.includes('party') || query.includes('who is involved') || query.includes('who signed')) {
         answer = `The contracting parties identified in "${activeDoc.name}" are:
 ${activeDoc.summary.parties.map((p, idx) => `• **Party ${idx + 1}**: ${p}`).join('\n')}
 
 These parties are mutually bound to all provisions, representations, and warranties detailed in this contract.`;
-      
-      // 3. Date / Duration / Effective
+
+        // 3. Date / Duration / Effective
       } else if (query.includes('date') || query.includes('effective') || query.includes('signed') || query.includes('signing')) {
         answer = `The agreement was signed/became effective on **${activeDoc.summary.date}**. 
 
 All obligations and restrictive covenants start running from this effective date unless otherwise specified in individual clauses.`;
-      
-      // 4. Executive Summary / Overview
+
+        // 4. Executive Summary / Overview
       } else if (query.includes('summary') || query.includes('summarize') || query.includes('overview') || query.includes('what is this') || query.includes('abstract')) {
         answer = `### Executive Summary of "${activeDoc.name}":
 ${activeDoc.summary.overview}
@@ -741,8 +741,8 @@ ${activeDoc.summary.overview}
 • **Signed Date:** ${activeDoc.summary.date}
 • **Governing Jurisdiction:** ${activeDoc.summary.jurisdiction}
 • **Parties:** ${activeDoc.summary.parties.join(' AND ')}`;
-      
-      // 5. Risks List
+
+        // 5. Risks List
       } else if (query.includes('risk') || query.includes('danger') || query.includes('warn') || query.includes('threat') || query.includes('exposure')) {
         answer = `### Risk and Exposure Assessment for "${activeDoc.name}":
 I identified **${activeDoc.risks.length} key risks** that warrant legal review:
@@ -750,8 +750,8 @@ I identified **${activeDoc.risks.length} key risks** that warrant legal review:
 ${activeDoc.risks.map((r, i) => `${i + 1}. **${r.title}** (${r.level} Risk) - *Ref: ${r.reference}*
    - **Description:** ${r.description}
    - **Recommendation:** ${r.recommendation}`).join('\n\n')}`;
-      
-      // 6. Missing Clauses / Checklist
+
+        // 6. Missing Clauses / Checklist
       } else if (query.includes('missing') || query.includes('lack') || query.includes('absent') || query.includes('checklist')) {
         answer = `### Missing Clauses Audit for "${activeDoc.name}":
 I flagged **${activeDoc.missingClauses.length} missing provisions** that should be incorporated for standard compliance:
@@ -760,8 +760,8 @@ ${activeDoc.missingClauses.map((m, i) => `${i + 1}. **${m.type}** (Criticality: 
    - **Gap Description:** ${m.description}
    - **Recommended Typical Text to Insert:** 
      \`"${m.typicalText}"\``).join('\n\n')}`;
-      
-      // 7. Obligations / Tasks
+
+        // 7. Obligations / Tasks
       } else if (query.includes('obligation') || query.includes('task') || query.includes('deadline') || query.includes('todo') || query.includes('must do')) {
         answer = `### Active Covenants and Obligations in "${activeDoc.name}":
 I extracted **${activeDoc.obligations.length} primary deliverables/obligations** for the contracting parties:
@@ -770,12 +770,12 @@ ${activeDoc.obligations.map((o, i) => `${i + 1}. **${o.party}**
    - **Obligation:** ${o.task}
    - **Deadline:** ${o.deadline}
    - **Current Status:** \`${o.status}\``).join('\n\n')}`;
-      
-      // 8. Specific Definitions search
+
+        // 8. Specific Definitions search
       } else if (query.includes('define') || query.includes('definition') || query.includes('mean') || query.includes('meaning') || query.includes('term') || query.includes('who is')) {
         // Find if any defined term is mentioned in the query
-        const matchingDefs = activeDoc.definitions.filter(d => 
-          query.includes(d.term.toLowerCase()) || 
+        const matchingDefs = activeDoc.definitions.filter(d =>
+          query.includes(d.term.toLowerCase()) ||
           queryTerms.some(word => d.term.toLowerCase().includes(word))
         );
 
@@ -788,12 +788,12 @@ Here are the primary terms defined in this agreement:
 
 ${activeDoc.definitions.map(d => `• **${d.term}** (Page ${d.page}): *${d.definition}*`).join('\n')}`;
         }
-      
-      // 9. Specific Clauses Search (Termination, Liability, Confidentiality, Force Majeure, etc.)
+
+        // 9. Specific Clauses Search (Termination, Liability, Confidentiality, Force Majeure, etc.)
       } else {
         // Look if query matches any clause types in activeDoc
-        const matchingClause = activeDoc.clauses.find(c => 
-          query.includes(c.type.toLowerCase()) || 
+        const matchingClause = activeDoc.clauses.find(c =>
+          query.includes(c.type.toLowerCase()) ||
           c.type.toLowerCase().split(/\s+/).some(w => w.length > 4 && query.includes(w))
         );
 
@@ -837,7 +837,7 @@ Can I provide specific information on Governing Law, Obligations, Definitions, o
       answer = "Please select or upload an active document. Once loaded, I can answer questions about the governing law, parties, obligations, risks, definitions, and specific clauses of that agreement.";
     }
 
-    setChatMessages((prev) => 
+    setChatMessages((prev) =>
       prev.map(m => m.id === aiMsgId ? { ...m, text: answer } : m)
     );
   };
