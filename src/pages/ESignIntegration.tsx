@@ -182,9 +182,17 @@ function DocRow({ doc }: { doc: SignDocument }) {
   return (
     <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden">
       {/* Document header */}
-      <button
-        className="w-full text-left p-5 hover:bg-slate-50/60 dark:hover:bg-zinc-950/30 transition-colors flex items-start gap-4"
+      <div
+        role="button"
+        tabIndex={0}
+        className="w-full text-left p-5 hover:bg-slate-50/60 dark:hover:bg-zinc-950/30 transition-colors flex items-start gap-4 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500"
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
       >
         <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/20 text-blue-500 flex-shrink-0">
           <FileText size={18} />
@@ -230,7 +238,7 @@ function DocRow({ doc }: { doc: SignDocument }) {
           </button>
           <ChevronRight size={16} className={`text-slate-400 dark:text-zinc-500 mt-2 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`} />
         </div>
-      </button>
+      </div>
 
       {/* Signers */}
       {expanded && (
