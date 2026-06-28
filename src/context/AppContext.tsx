@@ -69,6 +69,8 @@ interface AppContextType {
   setOllamaModel: (model: string) => void;
   ollamaStatus: 'disconnected' | 'connected' | 'checking';
   checkOllamaConnection: () => Promise<void>;
+  availableModels: string[];
+  setAvailableModels: (models: string[]) => void;
   documents: LegalDocument[];
   selectedDocumentId: string | null;
   setSelectedDocumentId: (id: string | null) => void;
@@ -384,6 +386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [ollamaUrl, setOllamaUrl] = useState<string>('http://localhost:11434');
   const [ollamaModel, setOllamaModel] = useState<string>('qwen2.5-coder:7b');
   const [ollamaStatus, setOllamaStatus] = useState<'disconnected' | 'connected' | 'checking'>('disconnected');
+  const [availableModels, setAvailableModels] = useState<string[]>(['qwen2.5-coder:7b', 'llama3:8b', 'mistral:latest']);
   const [documents, setDocuments] = useState<LegalDocument[]>(INITIAL_DOCUMENTS);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>('doc-1');
   const [analysisLoading, setAnalysisLoading] = useState<boolean>(false);
@@ -444,16 +447,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setThemeState(newTheme);
   };
 
-  // Check Ollama API server status
+  // Check Ollama API server status and query available models
   const checkOllamaConnection = async () => {
     setOllamaStatus('checking');
     try {
       const response = await fetch(`${ollamaUrl}/api/tags`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(3000), // Timeout quickly
+        signal: AbortSignal.timeout(4000), // Bounded timeout
       });
       if (response.ok) {
+        const data = await response.json();
+        if (data && data.models && Array.isArray(data.models)) {
+          const names = data.models.map((m: any) => m.name);
+          if (names.length > 0) {
+            setAvailableModels(names);
+          }
+        }
         setOllamaStatus('connected');
       } else {
         setOllamaStatus('disconnected');
@@ -858,6 +868,8 @@ Can I provide specific information on Governing Law, Obligations, Definitions, o
         setOllamaModel,
         ollamaStatus,
         checkOllamaConnection,
+        availableModels,
+        setAvailableModels,
         documents,
         selectedDocumentId,
         setSelectedDocumentId,

@@ -27,7 +27,8 @@ export const Settings: React.FC = () => {
     ollamaModel, 
     setOllamaModel, 
     ollamaStatus,
-    checkOllamaConnection 
+    checkOllamaConnection,
+    availableModels
   } = useApp();
 
   const [testLoading, setTestLoading] = useState(false);
@@ -129,15 +130,22 @@ export const Settings: React.FC = () => {
                 <label className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider block">
                   Model Parameter Name
                 </label>
-                <select
+                <input
+                  type="text"
                   value={modelInput}
                   onChange={(e) => setModelInput(e.target.value)}
+                  list="ollama-models"
+                  placeholder="Select or type your model, e.g. qwen2.5-coder:7b"
                   className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl py-2.5 px-3.5 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                >
-                  <option value="qwen2.5-coder:7b">qwen2.5-coder:7b (Recommended Legal coder)</option>
-                  <option value="llama3:8b">llama3:8b (Standard Llama instruct)</option>
-                  <option value="mistral:latest">mistral:latest (Mistral LLM)</option>
-                </select>
+                />
+                <datalist id="ollama-models">
+                  {availableModels.map((m) => (
+                    <option key={m} value={m} />
+                  ))}
+                </datalist>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 leading-normal mt-1">
+                  💡 <strong>Google Colab Integration:</strong> Expose your Colab Ollama port <code>11434</code> (e.g. via ngrok/Cloudflare), paste the public tunnel url above, and select/type your custom fine-tuned model.
+                </p>
               </div>
 
               <div className="flex justify-end pt-2">
