@@ -72,6 +72,7 @@ interface AppContextType {
   availableModels: string[];
   setAvailableModels: (models: string[]) => void;
   documents: LegalDocument[];
+  setDocuments: React.Dispatch<React.SetStateAction<LegalDocument[]>>;
   selectedDocumentId: string | null;
   setSelectedDocumentId: (id: string | null) => void;
   uploadDocument: (file: File) => Promise<void>;
@@ -871,6 +872,7 @@ Can I provide specific information on Governing Law, Obligations, Definitions, o
         availableModels,
         setAvailableModels,
         documents,
+        setDocuments,
         selectedDocumentId,
         setSelectedDocumentId,
         uploadDocument,

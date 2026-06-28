@@ -12,11 +12,26 @@ import {
 } from 'lucide-react';
 
 export const ObligationTracker: React.FC = () => {
-  const { documents, selectedDocumentId } = useApp();
+  const { documents, selectedDocumentId, setDocuments } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Pending' | 'Fulfilled'>('All');
   
   const doc = documents.find(d => d.id === selectedDocumentId);
+
+  const handleStatusChange = (index: number, newStatus: 'Active' | 'Pending' | 'Fulfilled') => {
+    if (!doc) return;
+    setDocuments((prevDocs) =>
+      prevDocs.map((d) => {
+        if (d.id === doc.id) {
+          const updatedObligations = d.obligations.map((o, i) =>
+            i === index ? { ...o, status: newStatus } : o
+          );
+          return { ...d, obligations: updatedObligations };
+        }
+        return d;
+      })
+    );
+  };
 
   if (!doc) {
     return (
@@ -105,6 +120,7 @@ export const ObligationTracker: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100 dark:border-zinc-800 text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider bg-slate-50/50 dark:bg-zinc-900/50">
+                <th className="py-4 px-6 w-16 text-center">Done</th>
                 <th className="py-4 px-6 w-1/4">Responsible Party</th>
                 <th className="py-4 px-6 w-1/2">Task Description</th>
                 <th className="py-4 px-6">Deadline</th>
@@ -114,13 +130,21 @@ export const ObligationTracker: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-zinc-800 text-xs">
               {filteredObligations.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-12 text-center text-slate-400 dark:text-zinc-500 font-sans">
+                  <td colSpan={5} className="py-12 text-center text-slate-400 dark:text-zinc-500 font-sans">
                     No obligations discovered for this search layout.
                   </td>
                 </tr>
               ) : (
                 filteredObligations.map((ob, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/30 dark:hover:bg-zinc-950/20 transition-colors">
+                  <tr key={idx} className={`hover:bg-slate-50/30 dark:hover:bg-zinc-950/20 transition-colors ${ob.status === 'Fulfilled' ? 'opacity-50 line-through' : ''}`}>
+                    <td className="py-4 px-6 text-center">
+                      <input
+                        type="checkbox"
+                        checked={ob.status === 'Fulfilled'}
+                        onChange={(e) => handleStatusChange(idx, e.target.checked ? 'Fulfilled' : 'Active')}
+                        className="h-4 w-4 rounded border-slate-300 dark:border-zinc-800 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                    </td>
                     <td className="py-4 px-6">
                       <span className="font-bold text-slate-700 dark:text-zinc-200">
                         {ob.party}
@@ -133,17 +157,19 @@ export const ObligationTracker: React.FC = () => {
                       {ob.deadline}
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        ob.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/20' :
-                        ob.status === 'Pending' ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20' :
-                        'bg-slate-100 dark:bg-zinc-800 text-slate-500'
-                      }`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${
-                          ob.status === 'Active' ? 'bg-emerald-500' :
-                          ob.status === 'Pending' ? 'bg-amber-500' : 'bg-slate-400'
-                        }`} />
-                        {ob.status}
-                      </span>
+                      <select
+                        value={ob.status}
+                        onChange={(e) => handleStatusChange(idx, e.target.value as 'Active' | 'Pending' | 'Fulfilled')}
+                        className={`px-2.5 py-1.5 rounded-xl text-[10px] font-bold uppercase border cursor-pointer focus:outline-none transition-all ${
+                          ob.status === 'Active' ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30' :
+                          ob.status === 'Pending' ? 'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/30' :
+                          'bg-slate-100 dark:bg-zinc-850 text-slate-600 dark:text-zinc-400 border-slate-200 dark:border-zinc-800'
+                        }`}
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Fulfilled">Fulfilled</option>
+                      </select>
                     </td>
                   </tr>
                 ))
