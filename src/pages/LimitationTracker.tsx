@@ -182,9 +182,17 @@ function PeriodCard({ period, onToggleAlert }: { period: LimitationPeriod; onTog
       'border-slate-200 dark:border-zinc-800'
     }`}>
       {/* Header */}
-      <button
-        className="w-full text-left p-5 hover:bg-slate-50/60 dark:hover:bg-zinc-950/30 transition-colors flex items-start gap-4"
+      <div
+        role="button"
+        tabIndex={0}
+        className="w-full text-left p-5 hover:bg-slate-50/60 dark:hover:bg-zinc-950/30 transition-colors flex items-start gap-4 cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-500/50"
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
       >
         <div className={`p-2.5 rounded-xl flex-shrink-0 ${cfg.bg} ${cfg.color}`}>
           <Icon size={17} />
@@ -218,14 +226,14 @@ function PeriodCard({ period, onToggleAlert }: { period: LimitationPeriod; onTog
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={(e) => { e.stopPropagation(); onToggleAlert(period.id); }}
-            className={`p-2 rounded-xl transition-colors ${period.alertEnabled ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500'}`}
+            className="p-2 rounded-xl transition-colors bg-slate-100 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 hover:bg-slate-200 dark:hover:bg-zinc-700 cursor-pointer"
             title={period.alertEnabled ? 'Disable alert' : 'Enable alert'}
           >
-            {period.alertEnabled ? <Bell size={14} /> : <BellOff size={14} />}
+            {period.alertEnabled ? <Bell size={14} className="text-blue-500" /> : <BellOff size={14} />}
           </button>
           {expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
         </div>
-      </button>
+      </div>
 
       {/* Expanded detail */}
       {expanded && (
