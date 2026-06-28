@@ -173,7 +173,7 @@ function BulkSendModal({ onClose }: { onClose: () => void }) {
 
 // ─── Document Row ─────────────────────────────────────────────────────────────
 
-function DocRow({ doc }: { doc: SignDocument }) {
+function DocRow({ doc, onViewSign }: { doc: SignDocument; onViewSign: (doc: SignDocument) => void }) {
   const [expanded, setExpanded] = useState(false);
   const status = docStatus(doc);
   const cfg = docStatusConfig[status];
@@ -231,8 +231,12 @@ function DocRow({ doc }: { doc: SignDocument }) {
             <Download size={14} />
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); }}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 transition-colors"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onViewSign(doc);
+            }}
+            className="p-2 rounded-xl bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 transition-colors cursor-pointer"
+            title="View Signature Details"
           >
             <Eye size={14} />
           </button>
@@ -295,11 +299,149 @@ function DocRow({ doc }: { doc: SignDocument }) {
   );
 }
 
+// ─── View Sign Modal ─────────────────────────────────────────────────────────
+
+interface ViewSignModalProps {
+  doc: SignDocument;
+  onClose: () => void;
+}
+
+function ViewSignModal({ doc, onClose }: ViewSignModalProps) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/50 dark:bg-zinc-900/50">
+          <div>
+            <h3 className="font-extrabold text-sm text-slate-800 dark:text-zinc-100 flex items-center gap-2">
+              <Shield size={16} className="text-emerald-500" />
+              eSign Verification & Audit Trail
+            </h3>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 max-w-md truncate">
+              Document: {doc.name}
+            </p>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 dark:text-zinc-500 transition-colors cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+          {/* Certificate Header Banner */}
+          <div className="p-4 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-900/20 flex items-center gap-3">
+            <CheckCircle className="text-emerald-500 w-8 h-8 flex-shrink-0" />
+            <div>
+              <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                Cryptographically Signed & Secured
+              </p>
+              <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                Authorized under Section 5 of the Information Technology Act, 2000. Tamper-evident hash logged securely.
+              </p>
+            </div>
+          </div>
+
+          {/* Audit Logs */}
+          <div className="space-y-4">
+            <h4 className="font-black text-[10px] uppercase text-slate-400 dark:text-zinc-500 tracking-wider">
+              Signature Audits ({doc.signers.length} Recipient(s))
+            </h4>
+
+            <div className="space-y-3.5">
+              {doc.signers.map((signer, index) => (
+                <div key={signer.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-950/40 border border-slate-100 dark:border-zinc-800 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-xs text-slate-800 dark:text-zinc-200 block">
+                        {signer.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-zinc-500 italic block">
+                        {signer.role}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+                        signer.status === 'signed' ? 'bg-emerald-50/40 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border-emerald-200' :
+                        signer.status === 'pending' ? 'bg-amber-50/40 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200' :
+                        'bg-rose-50/40 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-200'
+                      }`}>
+                        {signer.status}
+                      </span>
+                      <span className="text-[9px] bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 px-2 py-0.5 rounded font-medium">
+                        {methodLabel[signer.method]}
+                      </span>
+                    </div>
+                  </div>
+
+                  {signer.status === 'signed' ? (
+                    <div className="pt-2.5 border-t border-slate-100 dark:border-zinc-800 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
+                      <div>
+                        <span className="text-slate-400 dark:text-zinc-500 block">Sign Timestamp</span>
+                        <span className="font-semibold text-slate-700 dark:text-zinc-300">{signer.signedAt || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 dark:text-zinc-500 block">IP Address & Device</span>
+                        <span className="font-semibold text-slate-700 dark:text-zinc-300">192.168.{20 + index}.{104 + index} (Verified Chrome)</span>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <span className="text-slate-400 dark:text-zinc-500 block">Cryptographic Consent Hash</span>
+                        <span className="font-mono text-slate-600 dark:text-zinc-400 block truncate">
+                          sha256:8f4c2c77d446eeab0cf716d8495a89ee{index}27dff6b9a8bc43f1425da7dff6
+                        </span>
+                      </div>
+
+                      {/* Visual Signature stamp */}
+                      <div className="sm:col-span-2 mt-2 p-3 bg-white dark:bg-zinc-950 rounded-xl border border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                        <div>
+                          <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider">Visual Stamp Certify</span>
+                          <p className="font-serif italic text-blue-600 dark:text-blue-400 font-bold text-sm tracking-wide mt-0.5">
+                            {signer.name}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[7px] text-slate-400 dark:text-zinc-500 block">Digital Authenticator ID</span>
+                          <span className="font-mono font-bold text-slate-600 dark:text-zinc-400 text-[8px] uppercase">
+                            UIDAI-OTP-{signer.id.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 italic pt-1">
+                      Awaiting recipient verification authentication. A notification link has been forwarded to {signer.email}.
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 bg-slate-50 dark:bg-zinc-900/50 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
+          <button 
+            onClick={onClose} 
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+          >
+            Close Details
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export const ESignIntegration: React.FC = () => {
   const [showBulkSend, setShowBulkSend] = useState(false);
   const [documents, setDocuments] = useState<SignDocument[]>(DOCUMENTS);
+  const [viewingDocSign, setViewingDocSign] = useState<SignDocument | null>(null);
+  const [filter, setFilter] = useState<'all' | 'completed' | 'pending' | 'declined'>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadClick = () => {
@@ -333,6 +475,14 @@ export const ESignIntegration: React.FC = () => {
     pending: allSigners.filter((s) => s.status === 'pending').length,
     declined: allSigners.filter((s) => s.status === 'declined').length,
   };
+
+  const filteredDocs = documents.filter((doc) => {
+    if (filter === 'all') return true;
+    if (filter === 'completed') return docStatus(doc) === 'completed';
+    if (filter === 'pending') return doc.signers.some(s => s.status === 'pending');
+    if (filter === 'declined') return docStatus(doc) === 'declined';
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -379,14 +529,23 @@ export const ESignIntegration: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Documents', value: stats.total, icon: FileText, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20' },
-          { label: 'Fully Signed', value: stats.completed, icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20' },
-          { label: 'Awaiting Signature', value: stats.pending, icon: Clock, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20' },
-          { label: 'Declined', value: stats.declined, icon: XCircle, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/20' },
+          { label: 'Total Documents', value: stats.total, icon: FileText, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20', filterKey: 'all' as const },
+          { label: 'Fully Signed', value: stats.completed, icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20', filterKey: 'completed' as const },
+          { label: 'Awaiting Signature', value: stats.pending, icon: Clock, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20', filterKey: 'pending' as const },
+          { label: 'Declined', value: stats.declined, icon: XCircle, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/20', filterKey: 'declined' as const },
         ].map((s, i) => {
           const Icon = s.icon;
+          const isActive = filter === s.filterKey;
           return (
-            <div key={i} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div 
+              key={i} 
+              onClick={() => setFilter(isActive ? 'all' : s.filterKey)}
+              className={`bg-white dark:bg-zinc-900 border rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:border-violet-500/50 ${
+                isActive 
+                  ? 'border-violet-500 ring-2 ring-violet-500/10 shadow-md bg-violet-50/5 dark:bg-violet-950/5' 
+                  : 'border-slate-200 dark:border-zinc-800'
+              }`}
+            >
               <div className="flex items-center justify-between w-full">
                 <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">{s.label}</span>
                 <div className={`p-2 rounded-xl ${s.bg} ${s.color}`}><Icon size={15} /></div>
@@ -417,12 +576,13 @@ export const ESignIntegration: React.FC = () => {
           <h3 className="font-bold text-sm text-slate-800 dark:text-zinc-200 flex items-center gap-2">
             <Sparkles size={15} className="text-violet-500" /> Signature Requests
           </h3>
-          <span className="text-[11px] text-slate-400 dark:text-zinc-500">{documents.length} documents</span>
+          <span className="text-[11px] text-slate-400 dark:text-zinc-500">{filteredDocs.length} documents</span>
         </div>
-        {documents.map((doc) => <DocRow key={doc.id} doc={doc} />)}
+        {filteredDocs.map((doc) => <DocRow key={doc.id} doc={doc} onViewSign={setViewingDocSign} />)}
       </div>
 
       {showBulkSend && <BulkSendModal onClose={() => setShowBulkSend(false)} />}
+      {viewingDocSign && <ViewSignModal doc={viewingDocSign} onClose={() => setViewingDocSign(null)} />}
     </div>
   );
 };

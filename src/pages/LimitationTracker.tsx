@@ -346,14 +346,23 @@ export const LimitationTracker: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Expired', value: counts.expired, icon: Clock, color: 'text-slate-500 dark:text-zinc-400', bg: 'bg-slate-100 dark:bg-zinc-800' },
-          { label: 'Critical (≤7 days)', value: counts.critical, icon: Flame, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/20' },
-          { label: 'Warning (≤90 days)', value: counts.warning, icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20' },
-          { label: 'Safe', value: counts.safe, icon: Shield, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20' },
+          { label: 'Expired', value: counts.expired, icon: Clock, color: 'text-slate-500 dark:text-zinc-400', bg: 'bg-slate-100 dark:bg-zinc-800', filterKey: 'expired' as const },
+          { label: 'Critical (≤7 days)', value: counts.critical, icon: Flame, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/20', filterKey: 'critical' as const },
+          { label: 'Warning (≤90 days)', value: counts.warning, icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20', filterKey: 'warning' as const },
+          { label: 'Safe', value: counts.safe, icon: Shield, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20', filterKey: 'safe' as const },
         ].map((s, i) => {
           const Icon = s.icon;
+          const isActive = filter === s.filterKey;
           return (
-            <div key={i} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div 
+              key={i} 
+              onClick={() => setFilter(isActive ? 'all' : s.filterKey)}
+              className={`bg-white dark:bg-zinc-900 border rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:border-amber-500/50 ${
+                isActive 
+                  ? 'border-amber-500 ring-2 ring-amber-500/10 shadow-md bg-amber-50/5 dark:bg-amber-950/5' 
+                  : 'border-slate-200 dark:border-zinc-800'
+              }`}
+            >
               <div className="flex items-center justify-between w-full">
                 <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">{s.label}</span>
                 <div className={`p-2 rounded-xl ${s.bg} ${s.color}`}><Icon size={15} /></div>

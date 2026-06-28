@@ -407,14 +407,23 @@ ${c.counterProposal || 'N/A'}
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Clauses', value: MOCK_CLAUSES.length, icon: Scale, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20' },
-          { label: 'Negotiable', value: counts.negotiable, icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20' },
-          { label: 'Non-Negotiable', value: counts['non-negotiable'], icon: Shield, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/20' },
-          { label: 'Conditional', value: counts.conditional, icon: TrendingDown, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20' },
+          { label: 'Total Clauses', value: MOCK_CLAUSES.length, icon: Scale, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/20', filterKey: 'all' as const },
+          { label: 'Negotiable', value: counts.negotiable, icon: CheckCircle, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/20', filterKey: 'negotiable' as const },
+          { label: 'Non-Negotiable', value: counts['non-negotiable'], icon: Shield, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/20', filterKey: 'non-negotiable' as const },
+          { label: 'Conditional', value: counts.conditional, icon: TrendingDown, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/20', filterKey: 'conditional' as const },
         ].map((stat, idx) => {
           const Icon = stat.icon;
+          const isActive = filter === stat.filterKey;
           return (
-            <div key={idx} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col justify-between">
+            <div 
+              key={idx} 
+              onClick={() => setFilter(stat.filterKey)}
+              className={`bg-white dark:bg-zinc-900 border rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-all duration-200 hover:border-indigo-500/50 ${
+                isActive 
+                  ? 'border-indigo-500 ring-2 ring-indigo-500/10 shadow-md bg-indigo-50/5 dark:bg-indigo-950/5' 
+                  : 'border-slate-200 dark:border-zinc-800'
+              }`}
+            >
               <div className="flex items-center justify-between w-full">
                 <span className="text-[11px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">{stat.label}</span>
                 <div className={`p-2 rounded-xl ${stat.bg} ${stat.color}`}>
